@@ -3,7 +3,7 @@ from random import randint
 import pygame as pg
 
 SCREEN_WIDTH = 0
-SCREEN_HEIGIHT = 0
+SCREEN_HEIGHT = 0
 
 def start(width,height):
     global SCREEN_WIDTH, SCREEN_HEIGHT
@@ -18,7 +18,7 @@ class Player(Sprite):
         self.width = width
         self.height = height
         self.coords = coords
-        #player appearnce (will change later)
+        #player appearence (will change later)
         self.surf2 = pg.Surface((width,height))
         self.surf2.fill((255,0,0))
         #hitbox
@@ -42,7 +42,7 @@ class Player(Sprite):
         self.vel = vel
         self.col_check(collidables,[vel[0],0])
         self.coords[0] += self.vel[0]
-        self.col_check(collidables,[0,vel[1]])
+        #self.col_check(collidables,[0,vel[1]])
         self.coords[1] += self.vel[1]
         self.rect.move_ip(self.vel[0],self.vel[1])
         #collision detection
@@ -99,6 +99,9 @@ class Lantern(Sprite):
 class Platform(Sprite):
     def __init__(self,surf,coords,width):
         super().__init__()
+        self.surf = surf
+        self.coords = coords
+        self.width = width
 
 class Float(Sprite):
     def __init__(self,surf,coords,width=10,height=10):
@@ -139,21 +142,35 @@ class Ground(Sprite):
         self.rightFloat = Float(self.surf,[coords[0]+width,coords[1]],height=50)
 
 class Wall(Sprite):
-    def __init__(self,surf,area,coords,height = 400): # same areas as ground
+    def __init__(self,surf,area,side,coords,height = 400): # same areas as ground
         super().__init__()
         self.surf = surf
+        self.side = side
         self.coords = coords
         self.height = height
+        self.surf2 = pg.Surface((50,height))
+        if side:
+            sade = 'left' # side add (for img file name)
+        else:
+            sade = 'right'
         if area == 0:
-            temp = 'imgs/dungeon-wall-'
+            temp = 'imgs/dungeon-wall-'+sade+'-'
         elif area == 1:
-            temp = 'imgs/hall-wall-'
+            temp = 'imgs/hall-wall-'+sade+'-'
         elif area == 2:
-            temp = 'imgs/spire-wall-'
+            temp = 'imgs/spire-wall-'+sade+'-'
         elif area == 3:
-            temp = 'imgs/out-wall-'
+            temp = 'imgs/out-wall-'+sade+'-'
         for i in range(0,height//50):
-            pass
+            img = temp+str(randint(1,3))+'.png'
+            self.surf2.blit(pg.image.load(img),(0,i*50))
+        self.rect = self.surf2.get_rect()
+        self.rect.left = coords[0]
+        self.rect.top = coords[1]
+        self.topFloat = Float(self.surf,[coords[0],coords[1]-10],width=50)
+        self.bottomFloat = Float(self.surf,[coords[0],coords[1]+height+10],width=50)
+        self.leftFloat = Float(self.surf,[coords[0]-10,coords[1]],height=height)
+        self.rightFloat = Float(self.surf,[coords[0]+60,coords[1]],height=height)
 
 class Background(Sprite):
     pass
