@@ -18,9 +18,9 @@ jumping = False
 canjump = True
 jump_max = 100
 jump_height = 0
-airTime = 0
-maxAirTime = 5
+airTimeList = [0,20] # current , max
 touchingPlatform = False
+touchingWall = False
 
 #lantern
 lantern = classes.Lantern(win,player,[0,0])
@@ -32,14 +32,25 @@ allSprites.add(lantern)
 
 platforms = pg.sprite.Group()
 enemies = pg.sprite.Group()
+hfloats = pg.sprite.Group()
+vfloats = pg.sprite.Group()
 
 #ground for demo
 ground1 = classes.Ground(win,0,[0,350],width=200)
 allSprites.add(ground1)
 platforms.add(ground1)
+hfloats.add(ground1.topFloat)
+hfloats.add(ground1.bottomFloat)
+vfloats.add(ground1.leftFloat)
+vfloats.add(ground1.rightFloat)
+
 ground2 = classes.Ground(win,0,[300,350],width=200)
 allSprites.add(ground2)
 platforms.add(ground2)
+hfloats.add(ground2.topFloat)
+hfloats.add(ground2.bottomFloat)
+vfloats.add(ground2.leftFloat)
+vfloats.add(ground2.rightFloat)
 
 #main
 done = False
@@ -54,7 +65,7 @@ while not done:
     #key presses
     pressed = pg.key.get_pressed()
     x,y = 0,0
-    if pressed[pg.K_SPACE] and not jumping and touchingPlatform:
+    if pressed[pg.K_SPACE] and (not jumping and (touchingPlatform or touchingWall)):
         jumping = True
     if pressed[pg.K_a]:
         x -= 10
@@ -68,16 +79,36 @@ while not done:
         else:
             y -= 10
             jump_height += 10
-    #checks if it should fall
-    if not pg.sprite.spritecollideany(player,platforms):
+            
+    #checks if touching ground 
+    if not pg.sprite.spritecollideany(player,hfloats):
         touchingPlatform = False
     else:
         touchingPlatform = True
         canjump = True
+    
+    #checks if touching wall
+    if not pg.sprite.spritecollideany(player,vfloats):
+        touchingWall = False
+    else:
+        touchingWall = True
+        if x > 0:
+            x -= 5
+        elif x < 0:
+            x += 5
+        
+    #airtime / coyote time
     if not touchingPlatform and not jumping:
-        y += 10
+        if airTimeList[0] <= airTimeList[1]:
+            airTimeList[0] += 1
+        else: y += 10
+    
+    #checks if player fell to death
+    if player.rect.bottom <= 0:
+        player.respawn([0,0])
+        
     #move stuffs
-    player.move([x,y])
+    player.move([x,y],platforms)
     lantern.move()
     
     #draw stuffs
