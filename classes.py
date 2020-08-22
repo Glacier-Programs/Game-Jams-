@@ -34,11 +34,17 @@ class Player(Sprite):
         #collision detection
         if self.rect.left < 0:
             self.rect.left = 0
-        if self.rect.right > SCREEN_WIDTH:
+            self.coords[0] = 0
+        elif self.rect.right > SCREEN_WIDTH:
             self.rect.right = SCREEN_WIDTH
-        if self.rect.bottom >= SCREEN_HEIGHT:
+            self.coords[0] = SCREEN_WIDTH
+        if self.rect.bottom > SCREEN_HEIGHT:
             self.rect.bottom = SCREEN_HEIGHT
-
+            self.coords[1] = SCREEN_HEIGHT
+    def col_check(self,collidables,direction):
+        for collidable in collidables:
+            pass
+        
 class Lantern(Sprite):
     def __init__(self,surf,player,coords,width=10,height=10):
         super().__init__()
@@ -59,17 +65,17 @@ class Lantern(Sprite):
     def move(self):
         x,y = 0,0
         if self.player.coords[0] < self.coords[0]:
-            x -= 5
-        if self.player.coords[0] > self.coords[0]:
-            x += 5
-        if self.player.coords[1] - 10 < self.coords[1]:
-            y -= 5
-        if self.player.coords[1] - 10 > self.coords[1]:
-            y += 5
+            x -= 10
+        elif self.player.coords[0] > self.coords[0]:
+            x += 10
+        if self.player.coords[1] - 20 < self.coords[1]:
+            y -= 10
+        elif self.player.coords[1] - 20 > self.coords[1]:
+            y += 10
         self.vel = [x,y]
         self.rect.move_ip(self.vel[0],self.vel[1])
         self.coords[0] += x
-        self.coords[1] += y + 20
+        self.coords[1] += y
     def set_mode(self):
         if self.mode < 1:
             self.mode += 1
@@ -79,6 +85,17 @@ class Lantern(Sprite):
 class Platform(Sprite):
     def __init__(self,surf,coords,width):
         super().__init__()
+
+class Float(Sprite):
+    def __init__(self,surf,coords,width):
+        super().__init__()
+        self.surf = surf
+        self.coords = coords
+        self.width = width
+        self.surf2 = pg.Surface((width,10))
+        self.rect = self.surf2.get_rect()
+        self.rect.top = coords[1]
+        self.rect.left = coords[0]
 
 class Ground(Sprite):
     def __init__(self,surf,area,coords,width=400): # area: 0 - dungeon, 1 - castle main, 2 - Castle spire, 3 - outside
@@ -102,6 +119,7 @@ class Ground(Sprite):
         self.rect = self.surf2.get_rect()
         self.rect.left = coords[0]
         self.rect.top = coords[1]
+        self.float = Float(self.surf,[coords[0]+10,coords[1]-10],width+20)
 
 class Wall(Sprite):
     def __init__(self,surf,area,coords,height = 400): # same areas as ground
@@ -119,3 +137,6 @@ class Wall(Sprite):
             temp = 'imgs/out-wall-'
         for i in range(0,height//50):
             pass
+
+class Background(Sprite):
+    pass
