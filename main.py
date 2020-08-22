@@ -52,6 +52,15 @@ hfloats.add(ground2.bottomFloat)
 vfloats.add(ground2.leftFloat)
 vfloats.add(ground2.rightFloat)
 
+#walls for demo
+wall1 = classes.Wall(win,0,1,[150,250],height=100)
+allSprites.add(wall1)
+platforms.add(wall1)
+hfloats.add(wall1.topFloat)
+hfloats.add(wall1.bottomFloat)
+vfloats.add(wall1.leftFloat)
+vfloats.add(wall1.rightFloat)
+
 #main
 done = False
 while not done:
