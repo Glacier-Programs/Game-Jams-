@@ -1,4 +1,5 @@
 from pygame.sprite import Sprite
+from random import randint
 import pygame as pg
 
 SCREEN_WIDTH = 0
@@ -74,3 +75,47 @@ class Lantern(Sprite):
             self.mode += 1
         else:
             self.mode = 0
+
+class Platform(Sprite):
+    def __init__(self,surf,coords,width):
+        super().__init__()
+
+class Ground(Sprite):
+    def __init__(self,surf,area,coords,width=400): # area: 0 - dungeon, 1 - castle main, 2 - Castle spire, 3 - outside
+        super().__init__()
+        self.surf = surf
+        self.coords = coords
+        self.width = width
+        #make background
+        self.surf2 = pg.Surface((width,50))
+        if area == 0:
+            temp = 'imgs/dungeon-ground-'
+        elif area == 1:
+            temp = 'imgs/hall-ground-'
+        elif area == 2:
+            temp = 'imgs/spire-ground-'
+        elif area == 3:
+            temp = 'imgs/out-ground-'
+        for i in range(0,width//50):
+            img = temp+str(randint(1,3)) + '.png'
+            self.surf2.blit(pg.image.load(img),(i*50,0))
+        self.rect = self.surf2.get_rect()
+        self.rect.left = coords[0]
+        self.rect.top = coords[1]
+
+class Wall(Sprite):
+    def __init__(self,surf,area,coords,height = 400): # same areas as ground
+        super().__init__()
+        self.surf = surf
+        self.coords = coords
+        self.height = height
+        if area == 0:
+            temp = 'imgs/dungeon-wall-'
+        elif area == 1:
+            temp = 'imgs/hall-wall-'
+        elif area == 2:
+            temp = 'imgs/spire-wall-'
+        elif area == 3:
+            temp = 'imgs/out-wall-'
+        for i in range(0,height//50):
+            pass
