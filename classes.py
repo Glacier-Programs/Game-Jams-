@@ -26,9 +26,23 @@ class Player(Sprite):
         #other
         self.sprites = []
         self.vel = [0,0]
-    def move(self,vel):
+        self.touchingWall = False
+    def col_check(self,collidables,direction):
+        for collidable in collidables:
+            if self.rect.colliderect(collidable.rect):
+                if direction[0] > 0:
+                    self.rect.right = collidable.rect.left
+                    self.touchingWall = True
+                elif direction[0] < 0:
+                    self.rect.left = collidable.rect.right
+                    self.touchingWall = True
+                else:
+                    self.touchingWall = False
+    def move(self,vel,collidables):
         self.vel = vel
+        self.col_check(collidables,[vel[0],0])
         self.coords[0] += self.vel[0]
+        self.col_check(collidables,[0,vel[1]])
         self.coords[1] += self.vel[1]
         self.rect.move_ip(self.vel[0],self.vel[1])
         #collision detection
@@ -41,9 +55,9 @@ class Player(Sprite):
         if self.rect.bottom > SCREEN_HEIGHT:
             self.rect.bottom = SCREEN_HEIGHT
             self.coords[1] = SCREEN_HEIGHT
-    def col_check(self,collidables,direction):
-        for collidable in collidables:
-            pass
+    def respawn(self,coords):
+        self.rect.left = coords[0]
+        self.rect.top = coords[1]
         
 class Lantern(Sprite):
     def __init__(self,surf,player,coords,width=10,height=10):
@@ -87,12 +101,12 @@ class Platform(Sprite):
         super().__init__()
 
 class Float(Sprite):
-    def __init__(self,surf,coords,width):
+    def __init__(self,surf,coords,width=10,height=10):
         super().__init__()
         self.surf = surf
         self.coords = coords
         self.width = width
-        self.surf2 = pg.Surface((width,10))
+        self.surf2 = pg.Surface((width,height))
         self.rect = self.surf2.get_rect()
         self.rect.top = coords[1]
         self.rect.left = coords[0]
@@ -119,7 +133,10 @@ class Ground(Sprite):
         self.rect = self.surf2.get_rect()
         self.rect.left = coords[0]
         self.rect.top = coords[1]
-        self.float = Float(self.surf,[coords[0]+10,coords[1]-10],width+20)
+        self.topFloat = Float(self.surf,[coords[0],coords[1]-10],width=width)
+        self.bottomFloat = Float(self.surf,[coords[0],coords[1]+60],width=width)
+        self.leftFloat = Float(self.surf,[coords[0]-10,coords[1]],height=50)
+        self.rightFloat = Float(self.surf,[coords[0]+width,coords[1]],height=50)
 
 class Wall(Sprite):
     def __init__(self,surf,area,coords,height = 400): # same areas as ground
