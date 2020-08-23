@@ -12,7 +12,17 @@ def story(win):
     
     lantern = new_classes.Lantern(win,player,player.coords)
     player.set_surf(win)
+    
     level = read_level('lvl2',win)
+    collidables = []
+    interact = []
+    
+    for part in level:
+        if part.sub == 'platform':
+            collidables.append(part)
+        else:
+            interact.append(part)
+        
     done = False
     while not done:
         for event in pg.event.get():
@@ -29,6 +39,24 @@ def story(win):
             dx += 10
         if keys[pg.K_SPACE] and (not player.jumping and player.touchingGround or player.touchingWall):
             player.jumping = True
+        if keys[pg.K_w]:
+            for obj in interact:
+                xCase = obj.lCoords[0] < player.coords[0]+player.width and obj.lCoords[0]+obj.width > player.coords[0]
+                yCase = obj.lCoords[1] < player.coords[1]+player.height and obj.lCoords[1]+obj.height > player.coords[1]
+                print(xCase,yCase)
+                if xCase and yCase:
+                    print('opened')
+                    if obj.sub == 'door':
+                        done = True
+        if keys[pg.K_r]:
+            pass
+        
+        #mousy mouse
+        mouse = pg.mouse
+        if mouse.get_pressed()[0]:
+            pos = mouse.get_pos()
+            if not lantern.mode:
+                pass
         
         #jumping
         if player.jumping:
@@ -45,15 +73,16 @@ def story(win):
                 airTimeList[0] += 1
             else: dy += 5
         
-        player.move(level,dx,dy)
+        player.move(collidables,dx,dy)
         
         #blank out screen
-        win.fill((255,255,255))
+        win.fill((0,0,0))
         
         #render
         for sprite in level:
             sprite.render()
         player.render()
+        lantern.render()
         
         #update screen
         pg.display.update()
@@ -62,3 +91,4 @@ def story(win):
 if __name__ == '__main__':
     win = pg.display.set_mode((400,400))
     story(win)
+    pg.quit()
