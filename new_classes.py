@@ -125,14 +125,14 @@ class Player(Sprite):
             if self.collision(obj):
                 self.coords[0] -= dx
                 self.touchingWall = True
-        #check y collision
+        '''#check y collision
         self.coords[1] += dy
         for obj in objs:
             if self.collision(obj):
                 self.coords[1] -= dy
                 self.touchingGround = True
         xScreen = self.coords[0] > 400 or self.coords[0] < 0
-        yScreen = self.coords[1] > 400
+        yScreen = self.coords[1] > 400'''
         if yScreen or xScreen:
             self.respawn([100,100])
     def set_surf(self,surf):
@@ -228,3 +228,8 @@ class Light(Sprite):
             sprite.move()
         self.rect.move_ip(x,y)
         self.win.blit(self.surf,self.rect)
+
+def Power(Sprite):
+    def __init__(self):
+        super().__init__()
+        self.sprite
