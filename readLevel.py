@@ -13,15 +13,17 @@ def read_level(file,surf):
         if len(objType) > 1:
             beta_coords = objType[1].split(')')
             alpha_coords = beta_coords[0].split(',')
+            print(alpha_coords)
             coords = [int(alpha_coords[0])*50,int(alpha_coords[1])*50]
+            p3 = int(alpha_coords[2])
             objType = objType[0]
         
             if objType == 'ground':
-                returnMe.append(new_classes.Ground(surf,area,coords,50))
+                returnMe.append(new_classes.Ground(surf,area,coords,p3*50))
             elif objType == 'wall':
-                returnMe.append(new_classes.Wall(surf,area,coords,50))
+                returnMe.append(new_classes.Wall(surf,area,coords,p3*50))
             elif objType == 'platform':
-                returnMe.append(new_classes.StatPlat(surf,[coords[0],coords[1]],50,'imgs/platform.png'))
+                returnMe.append(new_classes.StatPlat(surf,[coords[0],coords[1]],p3*50,'imgs/platform.png'))
             elif objType == 'end':
                 returnMe.append(new_classes.Door(surf,[coords[0],coords[1]+10]))
     return returnMe
