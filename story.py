@@ -5,7 +5,12 @@ import new_classes
 #game loop
 def story(win):
     player = new_classes.Player([100,100],20,40)
-    Lantern = new_classes.Lantern(win,player,player.coords)
+    jump_height = 10
+    jump_max = 100
+    jump_height = 0
+    airTimeList = [0,20] # current , max
+    
+    lantern = new_classes.Lantern(win,player,player.coords)
     player.set_surf(win)
     level = read_level('lvl2',win)
     done = False
@@ -22,6 +27,23 @@ def story(win):
             dx -= 10
         elif keys[pg.K_d]:
             dx += 10
+        if keys[pg.K_SPACE] and (not player.jumping and player.touchingGround or player.touchingWall):
+            player.jumping = True
+        
+        #jumping
+        if player.jumping:
+            if jump_height >= jump_max:
+                player.jumping = False
+                jump_height = 0
+            else:
+                dy -= 10
+                jump_height += 10
+        
+        #coyote / airtime
+        if not player.touchingGround and not player.jumping:
+            if airTimeList[0] <= airTimeList[1]:
+                airTimeList[0] += 1
+            else: dy += 5
         
         player.move(level,dx,dy)
         
