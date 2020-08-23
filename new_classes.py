@@ -12,22 +12,25 @@ class Platform(Sprite):
         self.lCoords = coords #level coords
         self.rCoords = coords #relative coords
         self.sprite = sprite
-    def randomSprite(self,area,Type,reps,h=True,v=False):
+    def randomSprite(self,area,Type,reps,height,width,h=True,v=False):
         start = 'imgs/'+area+'-'+Type+'-'
-        sprite = Surface((50,50))
+        sprite = Surface((width,height))
         if v:
             h = False
         for i in range(0,reps):
             img = start + str(randint(1,3)) + '.png'
             if h: sprite.blit(pg.image.load(img),(i*50,0))
             else: sprite.blit(pg.image.load(img),(0,i*50))
-            return sprite
+        return sprite
     def constructSprite(self,file,reps,h=True,v=False):
         sprite = pg.Surface((self.width,self.height))
         for i in range(0,reps):
             if h: sprite.blit(pg.image.load(file),(i*50,0))
             else: sprite.blit(pg.image.load(file),(0,i*50))
         return sprite
+    def move(self,dx,dy):
+        self.lCoords[0] += dx
+        self.lCoords[1] += dy
     def render(self):
         if self.sprite == None: print('No Sprite: ', self)
         else: self.surf.blit(self.sprite,self.rCoords)
@@ -35,17 +38,23 @@ class Platform(Sprite):
 class Ground(Platform):
     def __init__(self,surf,area,coords,width):
         super().__init__(surf,coords,width,50)
-        self.sprite = self.randomSprite(area,'ground',width//50)
+        self.sprite = Surface((width,50))
+        for i in range(0,width//50):
+            img = 'imgs/'+area+'-ground-'+str(randint(1,3)) + '.png'
+            self.sprite.blit(pg.image.load(img),(i*50,0))
         
 class Wall(Platform):
     def __init__(self,surf,area,coords,height):
         super().__init__(surf,coords,50,height)
-        self.sprite = self.randomSprite(area,'wall-right',height//50)
+        self.sprite = Surface((50,height))
+        for i in range(0,height//50):
+            img = 'imgs/'+area+'-wall-right-'+str(randint(1,3))+'.png'
+            self.sprite.blit(pg.image.load(img),(0,i*50))
 
 class StatPlat(Platform): #stationary platform
     def __init__(self,surf,coords,width,sprite):
         super().__init__(surf,coords,width,50)
-        self.sprite = self.constructSprite(sprite,width//50)
+        self.sprite = pg.image.load(sprite)
 
 class FallPlat(Platform): #falling platform
     def __init__(self,surf,coords,width,sprite,fallSpeed=10):
@@ -54,12 +63,32 @@ class FallPlat(Platform): #falling platform
         self.fallSpeed = fallSpeed
         self.wasTouched = False
     def render(self):
-        if self.wasTouched: self.coords[1] -= self.fallSpeed
+        if self.wasTouched: self.move(0,-self.fallSpeed)
         if self.coords[1] > 400: self.kill()
         else: self.surf.blit(self.sprite,self.coords)
 
+class PlatformBrain():
+    #make this smarter and more dependant on previous platforms
+    def getNewPlatformPosition(self,lastPlatformCoords):
+        # 400 starts at the very right of the screen
+        xPosition = 400
+        # 350 is the maximum or else the platform will go through the ground
+        yPosition = 0
+        if lastPlatformCoords[1] <= 133: # Platform is in the top third
+            yPosition = randint(50, 350)
+        elif lastPlatformCoords[1] <= 266: # Platform is in the middle third  
+            yPosition = randint(150, 300)
+        else: # Platform is on the bottom third
+            yPosition = randint(225, 300)
+
+        return [xPosition, yPosition]
+    def shouldPlatformBeCreated(self, platformCoords):
+        lastPlatform = len(platformCoords) - 1
+        return platformCoords[lastPlatform][0] <= 250
+
 class Door(Sprite):
     def __init__(self,surf,coords):
+        super().__init__()
         self.surf = surf
         self.rCoords = coords
         self.lCoords = coords
@@ -97,12 +126,15 @@ class Player(Sprite):
         for obj in objs:
             if self.collision(obj):
                 self.coords[1] -= dy
-                self.touchingGround = False
+                self.touchingGround = True
+        xScreen = self.coords[0] > 400 or self.coords[0] < 0
+        yScreen = self.coords[1] > 400
+        if yScreen:
+            self.respawn([100,100])
     def set_surf(self,surf):
         self.surf = surf
     def render(self):
         self.surf.blit(self.sprite,self.coords)
-
     def collision(self,obj):
         xCase = obj.lCoords[0] < self.coords[0]+self.width and obj.lCoords[0]+obj.width > self.coords[0]
         yCase = obj.lCoords[1] < self.coords[1]+self.height and obj.lCoords[1]+obj.height > self.coords[1]
@@ -110,6 +142,8 @@ class Player(Sprite):
             return True
         else:
             return False
+    def respawn(self,spot):
+        self.coords = spot
 
 class Pixie(Sprite):
     def __init__(self):
@@ -154,6 +188,7 @@ class Light(Sprite):
         self.master = master
         self.sprites = pg.sprite.Group()
         self.surf = pg.Surface((radius*2,radius*2))
+        self.surf.fill((0,0,0))
         self.rect = self.surf.get_rect()
         self.add_sprites([self.master.player,self.master])
     def add_sprites(self,sprites):
