@@ -70,6 +70,7 @@ class FallPlat(Platform): #falling platform
         if self.coords[1] > 400: self.kill()
         else: self.surf.blit(self.sprite,self.coords)
 
+# This can be deleted later because it is never used
 class PlatformBrain():
     #make this smarter and more dependant on previous platforms
     def getNewPlatformPosition(self,lastPlatformCoords):
@@ -125,14 +126,14 @@ class Player(Sprite):
             if self.collision(obj):
                 self.coords[0] -= dx
                 self.touchingWall = True
-        '''#check y collision
+        #check y collision
         self.coords[1] += dy
         for obj in objs:
             if self.collision(obj):
                 self.coords[1] -= dy
                 self.touchingGround = True
         xScreen = self.coords[0] > 400 or self.coords[0] < 0
-        yScreen = self.coords[1] > 400'''
+        yScreen = self.coords[1] > 400
         if yScreen or xScreen:
             self.respawn([100,100])
     def set_surf(self,surf):
@@ -157,29 +158,40 @@ class Lantern(Sprite):
     def __init__(self,win,player,coords):
         super().__init__()
         self.player = player
-        self.coords = coords
+        # You can not set it equal to coord or else it will be equal to playerCoords
+        self.coords = [coords[0], coords[1]]
         self.lightLevel = 2
         self.light = Light(win,self,1*25)
+        # Mode 0: Tracking Mode | Mode 1: Stay Mode
         self.mode = 0
         self.sprite = Surface((20,20))
         self.sprite.fill((255,255,0))
-    def move(self):
-        x,y = 0,0
-        if self.player.coords[0] < self.coords[0]:
-            x -= 10
-        elif self.player.coords[0] > self.coords[0]:
-            x += 10
-        if self.player.coords[1] - 40 < self.coords[1]:
-            y -= 10
-        elif self.player.coords[1] - 40 > self.coords[1]:
-            y += 10
-        self.vel = [x,y]
+        self.surf = win
+        self.trackingCoords = player.coords
+    def moveCoords(self, x, y):
         self.coords[0] += x
         self.coords[1] += y
+    def move(self):
+        laternSpeed = 5
+        # 40 is the distance between the lantern and the player
+        x = self.trackingCoords[0]
+        y = self.trackingCoords[1] - 40
+        if x - 5 > self.coords[0]: # Lantern moves right
+            self.coords[0] += laternSpeed
+        elif x + 5 < self.coords[0]: # Lantern moves left
+            self.coords[0] -= laternSpeed
+        
+        if y - 5 > self.coords[1]: # Lantern moves Down
+            self.coords[1] += laternSpeed
+        elif y + 5 < self.coords[1]: # Lantern moves Up
+            self.coords[1] -= laternSpeed
+
+
+
     def set_mode(self,mode):
         self.mode = mode
     def render(self):
-        self.player.surf.blit(self.sprite,self.coords)
+        self.surf.blit(self.sprite, self.coords)
         #self.light.blit(self.sprite,(100,100))
 
 class Background(Sprite):

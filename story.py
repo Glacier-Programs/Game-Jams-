@@ -10,11 +10,13 @@ def story(win):
     jump_height = 0
     airTimeList = [0,20] # current , max
     
-    lantern = new_classes.Lantern(win,player,player.coords)
+    lantern = new_classes.Lantern(win, player, player.coords)
     player.set_surf(win)
     
-    level = read_level('lvl1',win)
+    level = read_level('lvl2',win)
+    # Collidables are platforms, walls, ground, etc.
     collidables = []
+    # Interacts are doors, etc
     interact = []
     for part in level:
         if part.sub == 'platform':
@@ -42,21 +44,26 @@ def story(win):
             for obj in interact:
                 xCase = obj.lCoords[0] < player.coords[0]+player.width and obj.lCoords[0]+obj.width > player.coords[0]
                 yCase = obj.lCoords[1] < player.coords[1]+player.height and obj.lCoords[1]+obj.height > player.coords[1]
-                print(xCase,yCase)
+                #print(xCase,yCase)
                 if xCase and yCase:
                     print('opened')
                     if obj.sub == 'door':
                         done = True
         if keys[pg.K_r]:
+            # Latern goes into tracking mode 
+            lantern.mode = 0
+            lantern.trackingCoords = player.coords
             pass
         #unpressed
-        
         
         #mousy mouse
         mouse = pg.mouse
         if mouse.get_pressed()[0]:
             pos = mouse.get_pos()
             if not lantern.mode:
+                # Latern goes in Stay Mode
+                lantern.mode = 1
+                lantern.trackingCoords = pos
                 pass
         
         #jumping
@@ -75,7 +82,8 @@ def story(win):
             else: dy += 5
         
         player.move(collidables,dx,dy)
-        
+        lantern.move()
+
         #blank out screen
         win.fill((0,0,0))
         
