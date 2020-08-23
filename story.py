@@ -13,10 +13,9 @@ def story(win):
     lantern = new_classes.Lantern(win,player,player.coords)
     player.set_surf(win)
     
-    level = read_level('lvl2',win)
+    level = read_level('lvl1',win)
     collidables = []
     interact = []
-    
     for part in level:
         if part.sub == 'platform':
             collidables.append(part)
@@ -50,6 +49,8 @@ def story(win):
                         done = True
         if keys[pg.K_r]:
             pass
+        #unpressed
+        
         
         #mousy mouse
         mouse = pg.mouse
