@@ -7,6 +7,7 @@ class Platform(Sprite):
     def __init__(self,surf,coords,width,height,sprite=None):
         super().__init__()
         self.surf = surf
+        self.sub = 'platform'
         self.width = width
         self.height = height
         self.lCoords = coords #level coords
@@ -53,8 +54,10 @@ class Wall(Platform):
 
 class StatPlat(Platform): #stationary platform
     def __init__(self,surf,coords,width,sprite):
-        super().__init__(surf,coords,width,50)
+        super().__init__(surf,coords,width,20)
         self.sprite = pg.image.load(sprite)
+    def render(self):
+        self.surf.blit(self.sprite,[self.rCoords[0],self.rCoords[1]-20])
 
 class FallPlat(Platform): #falling platform
     def __init__(self,surf,coords,width,sprite,fallSpeed=10):
@@ -89,13 +92,14 @@ class PlatformBrain():
 class Door(Sprite):
     def __init__(self,surf,coords):
         super().__init__()
+        self.sub = 'door'
         self.surf = surf
         self.rCoords = coords
         self.lCoords = coords
         self.height,self.width = 50,50
         self.sprite = pg.image.load('imgs/door.png')
     def render(self):
-        self.surf.blit(self.sprite,self.rCoords)
+        self.surf.blit(self.sprite,[self.rCoords[0],self.rCoords[1]+1])
 
 class Player(Sprite):
     def __init__(self,coords,width,height):
@@ -129,7 +133,7 @@ class Player(Sprite):
                 self.touchingGround = True
         xScreen = self.coords[0] > 400 or self.coords[0] < 0
         yScreen = self.coords[1] > 400
-        if yScreen:
+        if yScreen or xScreen:
             self.respawn([100,100])
     def set_surf(self,surf):
         self.surf = surf
@@ -157,15 +161,17 @@ class Lantern(Sprite):
         self.lightLevel = 2
         self.light = Light(win,self,1*25)
         self.mode = 0
+        self.sprite = Surface((20,20))
+        self.sprite.fill((255,255,0))
     def move(self):
         x,y = 0,0
         if self.player.coords[0] < self.coords[0]:
             x -= 10
         elif self.player.coords[0] > self.coords[0]:
             x += 10
-        if self.player.coords[1] - 20 < self.coords[1]:
+        if self.player.coords[1] - 40 < self.coords[1]:
             y -= 10
-        elif self.player.coords[1] - 20 > self.coords[1]:
+        elif self.player.coords[1] - 40 > self.coords[1]:
             y += 10
         self.vel = [x,y]
         self.coords[0] += x
@@ -173,7 +179,8 @@ class Lantern(Sprite):
     def set_mode(self,mode):
         self.mode = mode
     def render(self):
-        self.light.blit(self.sprite,(100,100))
+        self.player.surf.blit(self.sprite,self.coords)
+        #self.light.blit(self.sprite,(100,100))
 
 class Background(Sprite):
     def __init__(self):
