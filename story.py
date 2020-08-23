@@ -13,7 +13,7 @@ def story(win):
     lantern = new_classes.Lantern(win, player, player.coords)
     player.set_surf(win)
     
-    level = read_level('lvl3',win)
+    level = read_level('lvl2',win)
     # Collidables are platforms, walls, ground, etc.
     collidables = []
     # Interacts are doors, etc
