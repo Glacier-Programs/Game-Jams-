@@ -55,7 +55,7 @@ class Wall(Platform):
 class StatPlat(Platform): #stationary platform
     def __init__(self,surf,coords,width,sprite):
         super().__init__(surf,coords,width,20)
-        self.sprite = pg.image.load(sprite)
+        self.sprite = pg.image.load('imgs/platform.png')
     def render(self):
         self.surf.blit(self.sprite,[self.rCoords[0],self.rCoords[1]-20])
 
@@ -70,7 +70,6 @@ class FallPlat(Platform): #falling platform
         if self.coords[1] > 400: self.kill()
         else: self.surf.blit(self.sprite,self.coords)
 
-# This can be deleted later because it is never used
 class PlatformBrain():
     #make this smarter and more dependant on previous platforms
     def getNewPlatformPosition(self,lastPlatformCoords):
@@ -161,7 +160,7 @@ class Lantern(Sprite):
         # You can not set it equal to coord or else it will be equal to playerCoords
         self.coords = [coords[0], coords[1]]
         self.lightLevel = 2
-        self.light = Light(win,self,1*25)
+        self.light = Light(win,self,self.lightLevel*25)
         # Mode 0: Tracking Mode | Mode 1: Stay Mode
         self.mode = 0
         self.sprite = Surface((20,20))
@@ -185,14 +184,11 @@ class Lantern(Sprite):
             self.coords[1] += laternSpeed
         elif y + 5 < self.coords[1]: # Lantern moves Up
             self.coords[1] -= laternSpeed
-
-
-
     def set_mode(self,mode):
         self.mode = mode
     def render(self):
         self.surf.blit(self.sprite, self.coords)
-        #self.light.blit(self.sprite,(100,100))
+        self.light.update()
 
 class Background(Sprite):
     def __init__(self):
@@ -200,48 +196,65 @@ class Background(Sprite):
 
 class Light(Sprite):
     def __init__(self,win,master,radius):
+        #set variables
         super().__init__()
         self.radius = radius
         self.maxRadius = 100
         self.win = win
         self.master = master
+        #co-ordinates
+        self.coords = [master.coords[0]-100,master.coords[1]-100]
+        self.chase = master.coords
+        #set up what will be used to draw
         self.sprites = pg.sprite.Group()
-        self.surf = pg.Surface((radius*2,radius*2))
-        self.surf.fill((0,0,0))
-        self.rect = self.surf.get_rect()
-        self.add_sprites([self.master.player,self.master])
+        self.surf = pg.Surface((200,200))#change this if maxRadius changes
+        self.surf.fill((255,255,255))
+        self.add_sprites([self.master])
     def add_sprites(self,sprites):
         for sprite in sprites:
             self.sprites.add(sprite)
-    def update(self,vel):
+    def update(self):
         x,y = 0,0
-        if self.master.coords != self.coords:
-                if self.master.coords[0] > self.coords[0]:
+        print('m',self.master.coords)
+        print('l',self.coords)
+        chaseX = self.chase[0]-100
+        chaseY = self.chase[1]-100
+        if [chaseX,chaseY] != self.coords:
+                # offset in order to make the lantern its center
+                if chaseX > self.coords[0]:
                     if self.master.coords[0] - self.coords[0] < 10:
-                        x -= self.master.coords[0] - self.coords[0]
-                    else:
-                        x -= 10
-                elif self.master.coords[0] < self.coords[0]:
-                    if self.coords[0] - self.master.coords[0] < 10:
-                        x += self.coords[0] - self.master.coords[0]
+                        x += chaseX - self.coords[0]
                     else:
                         x += 10
-                if self.master.coords[1] > self.coords[1]:
-                    if self.master.coords[1] - self.coords[1] < 10:
-                        y += self.master.coords[1] - self.coords[1]
+                elif chaseX < self.coords[0]:
+                    if self.coords[0] - chaseX < 10:
+                        x -= self.coords[0] - chaseX
+                    else:
+                        x -= 10
+                if chaseY > self.coords[1]:
+                    if chaseY - self.coords[1] < 10:
+                        y += chaseY - self.coords[1]
                     else:
                         y += 10
-                elif self.coords[1] > self.master.coords[1]:
-                    if self.coords[1] - self.master.coords[1] < 10:
-                        y -= self.coords[1] - self.master.coords[1]
+                elif chaseY < self.coords[1]:
+                    if self.coords[1] - chaseY < 10:
+                        y -= self.coords[1] - chaseY
                     else:
                         y -= 10
         for sprite in self.sprites:
             sprite.move()
-        self.rect.move_ip(x,y)
-        self.win.blit(self.surf,self.rect)
+        self.coords[0] += x
+        self.coords[1] += y
+        self.win.blit(self.surf,self.coords)
 
-def Power(Sprite):
-    def __init__(self):
+class Power(Sprite):
+    def __init__(self,surf,coords):
         super().__init__()
-        self.sprite
+        self.sub = 'power'
+        self.surf = surf
+        self.rCoords = coords
+        self.lCoords = coords
+        self.height,self.width = 50,50
+        self.sprite = pg.image.load('imgs/powerUp.png')
+    def render(self):
+        self.surf.blit(self.sprite,[self.rCoords[0],self.rCoords[1]+1])
