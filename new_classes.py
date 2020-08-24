@@ -29,9 +29,15 @@ class Platform(Sprite):
             if h: sprite.blit(pg.image.load(file),(i*50,0))
             else: sprite.blit(pg.image.load(file),(0,i*50))
         return sprite
-    def move(self,dx,dy):
-        self.lCoords[0] += dx
-        self.lCoords[1] += dy
+    def relMove(self,dx,dy):
+        self.rCoords[0] += dx
+        self.rCoords[1] += dy
+    def renderToLight(self,light):
+        lightCoords = [ self.lCoords[0] - light.coords[0],
+            self.lCoords[1] - light.coords[1]]
+        if light.up: lightCoords[1] += light.upCompensation
+        if light.right: lightCoords[0] += light.rightCompensation
+        light.blit(self.sprite,lightCoords)
     def render(self):
         if self.sprite == None: print('No Sprite: ', self)
         else: self.surf.blit(self.sprite,self.rCoords)
@@ -98,12 +104,22 @@ class Door(Sprite):
         self.lCoords = coords
         self.height,self.width = 50,50
         self.sprite = pg.image.load('imgs/door.png')
+    def relMove(dx,dy):
+        self.rCoords[0] += dx
+        self.rCoords[1] += dy
     def render(self):
         self.surf.blit(self.sprite,[self.rCoords[0],self.rCoords[1]+1])
+    def renderToLight(self,light):
+        lightCoords = [ self.lCoords[0] - light.coords[0],
+                        self.lCoords[1] - light.coords[1]]
+        if light.up: lightCoords[1] += light.upCompensation
+        if light.right: lightCoords[0] += light.rightCompensation
+        light.blit(self.sprite,lightCoords)
 
 class Player(Sprite):
     def __init__(self,coords,width,height):
         super().__init__()
+        self.sub = 'player'
         self.coords = coords
         self.width = width
         self.height = height
@@ -111,6 +127,26 @@ class Player(Sprite):
         self.touchingGround = False
         self.toucingWall = False
         self.jumping = False
+        self.lightCoords = [0,0]
+    def moveToLantern(self, lanternCoords):
+        # Add/Subtract 5 to create a margin so it does not flash back and forth.
+        # Move x direction
+        xAlign, yAlign = False, False
+        if self.coords[0] < lanternCoords[0] - 5: # Move right
+            self.coords[0] += 10
+        elif self.coords[0] > lanternCoords[0] + 5: # Move Left
+            self.coords[0] -= 10
+        else:
+            xAlign = True
+        # Move y direction
+        if self.coords[1] > lanternCoords[1] + 5: # Move up
+            self.coords[1] -= 10
+        elif self.coords[1] < lanternCoords[1] - 5: # Move down
+            self.coords[1] += 10
+        else:
+            yAlign = True
+        # If they are both aligned then we stop grappling resulting in False
+        return not (xAlign and yAlign)
     def move(self,objs,dx,dy):
         #reset values
         self.touchingGround = False
@@ -135,30 +171,18 @@ class Player(Sprite):
         yScreen = self.coords[1] > 400
         if yScreen or xScreen:
             self.respawn([100,100])
-    def moveToLantern(self, lanternCoords):
-        # Add/Subtract 5 to create a margin so it does not flash back and forth.
-        # Move x direction
-        xAlign, yAlign = False, False
-        if self.coords[0] < lanternCoords[0] - 5: # Move right
-            self.coords[0] += 10
-        elif self.coords[0] > lanternCoords[0] + 5: # Move Left
-            self.coords[0] -= 10
-        else:
-            xAlign = True
-        # Move y direction
-        if self.coords[1] > lanternCoords[1] + 5: # Move up
-            self.coords[1] -= 10
-        elif self.coords[1] < lanternCoords[1] - 5: # Move down
-            self.coords[1] += 10
-        else:
-            yAlign = True
-        # If they are both aligned then we stop grappling resulting in False
-        return not (xAlign and yAlign)
-
     def set_surf(self,surf):
         self.surf = surf
-    def render(self):
+    def relMove(self,dx,dy):
+        self.rCoords[0] += dx
+        self.rCoords[1] += dy
+    def render(self): 
         self.surf.blit(self.sprite,self.coords)
+    def renderToLight(self,light):
+        lightCoords = [ self.coords[0] - light.coords[0],
+            self.coords[1] - light.coords[1]]
+        if light.right: lightCoords[0] += light.rightCompensation
+        light.blit(self.sprite,lightCoords)
     def collision(self,obj):
         xCase = obj.lCoords[0] < self.coords[0]+self.width and obj.lCoords[0]+obj.width > self.coords[0]
         yCase = obj.lCoords[1] < self.coords[1]+self.height and obj.lCoords[1]+obj.height > self.coords[1]
@@ -177,55 +201,61 @@ class Lantern(Sprite):
     def __init__(self,win,player,coords):
         super().__init__()
         self.player = player
+        self.sub = 'lantern'
+        self.playerGrappling = False
         # You can not set it equal to coord or else it will be equal to playerCoords
         self.coords = [coords[0], coords[1]]
-        self.playerGrappling = False
         self.lightLevel = 2
         self.light = Light(win,self,self.lightLevel*25)
+        #depletion
+        self.maxDeplete = 100
+        self.deplete = 0
         # Mode 0: Tracking Mode | Mode 1: Stay Mode
         self.mode = 0
         self.sprite = Surface((20,20))
         self.sprite.fill((255,255,0))
         self.surf = win
         self.trackingCoords = player.coords
-
     def checkGrapplingHook(self, playPos):
         # 20 is the lightbox width and height
         xCase = playPos[0] > self.coords[0] and playPos[0] < self.coords[0] + 20
         yCase = playPos[1] > self.coords[1] and playPos[1] < self.coords[1] + 20
         self.playerGrappling = xCase and yCase
-
+    def moveCoords(self, x, y):
+        self.coords[0] += x
+        self.coords[1] += y
     def move(self):
         laternSpeed = 5
-        # 40 is the distance between the lantern and the player and only goes when tracking the player
-        hoverHeight = 40
-        if self.mode == 1:
-            hoverHeight = 0
+        # 40 is the distance between the lantern and the player
         x = self.trackingCoords[0]
-        y = self.trackingCoords[1] - hoverHeight
+        y = self.trackingCoords[1] - 40
         if x - 5 > self.coords[0]: # Lantern moves right
             self.coords[0] += laternSpeed
         elif x + 5 < self.coords[0]: # Lantern moves left
             self.coords[0] -= laternSpeed
-        
         if y - 5 > self.coords[1]: # Lantern moves Down
             self.coords[1] += laternSpeed
         elif y + 5 < self.coords[1]: # Lantern moves Up
             self.coords[1] -= laternSpeed
+        if self.mode == 1:
+            if self.deplete // 10 < self.maxDeplete:
+                self.deplete += 1
     def set_mode(self,mode):
         self.mode = mode
     def render(self):
         self.surf.blit(self.sprite, self.coords)
-        #self.light.update()
+        self.light.update()
+    def renderToLight(self,light):
+        light.blit(self.sprite,(90,90))
 
 class Background(Sprite):
     def __init__(self):
         super().__init__()
 
-class Light(Sprite):
+class Light(Surface):
     def __init__(self,win,master,radius):
         #set variables
-        super().__init__()
+        super().__init__((200,200)) #change this if maxRadius changes
         self.radius = radius
         self.maxRadius = 100
         self.win = win
@@ -233,16 +263,22 @@ class Light(Sprite):
         #co-ordinates
         self.coords = [master.coords[0]-100,master.coords[1]-100]
         self.chase = master.coords
+        #adjust offset from going right / down / grappling
+        self.right = False
+        self.rightCompensation = -10
+        self.up = False
+        self.upCompensation = -10
         #set up what will be used to draw
         self.sprites = pg.sprite.Group()
-        self.surf = pg.Surface((200,200))#change this if maxRadius changes
-        self.surf.fill((255,255,255))
         self.add_sprites([self.master])
     def add_sprites(self,sprites):
         for sprite in sprites:
             self.sprites.add(sprite)
+    def remove_sprite(self,sprite):
+        self.sprites.remove(sprite)
     def update(self):
         x,y = 0,0
+        self.right, self.up = False,False
         print('m',self.master.coords)
         print('l',self.coords)
         chaseX = self.chase[0]-100
@@ -269,12 +305,29 @@ class Light(Sprite):
                         y -= self.coords[1] - chaseY
                     else:
                         y -= 10
+        self.fill((15,111,225))
+        
+        if x > 0:
+            self.right = True
+        if y < 0:
+            self.right = True
+    
         for sprite in self.sprites:
-            sprite.move()
+            if sprite != self.master:
+                sprite.renderToLight(self)
+        self.master.renderToLight(self)
+        #light depletion
+        border_size = self.master.deplete // 10
+        spot = 200-border_size
+        self.blit(Surface((200,border_size)),(0,0)) # top
+        self.blit(Surface((border_size,200)),(0,0)) # left
+        self.blit(Surface((200,border_size)),(0,spot)) # bottom
+        self.blit(Surface((border_size,200)),(spot,0)) # right
+        #other stuffs
         self.coords[0] += x
         self.coords[1] += y
-        self.win.blit(self.surf,self.coords)
-
+        self.win.blit(self,self.coords)
+        
 class Power(Sprite):
     def __init__(self,surf,coords):
         super().__init__()
@@ -287,13 +340,21 @@ class Power(Sprite):
         # This keeps track of where power is in the level list. So we can delete it later
         self.levelIndex = 0
         self.used = False
+
     def isTouchingPowerUp(self, playCoords, width, height):
         # This skips over it if we have gotten rid of it.
         if self.used:
             return False
         xCase = playCoords[0]+width > self.lCoords[0] and playCoords[0] < self.lCoords[0] + self.width
-        yCase = playCoords[1]+height > self.lCoords[1] and playCoords[1] < self.lCoords[1] + self.height
+        yCase = playCoords[1]+height > self.lCoords[1] and playCoords[1] < self.lCoords[1] + self.height    
         return xCase and yCase
 
     def render(self):
         self.surf.blit(self.sprite,[self.rCoords[0],self.rCoords[1]+1])
+    
+    def renderToLight(self,light):
+        lightCoords = [ self.lCoords[0] - light.coords[0],
+            self.lCoords[1] - light.coords[1]]
+        if light.up: lightCoords[1] += light.upCompensation
+        if light.right: lightCoords[0] += light.rightCompensation
+        light.blit(self.sprite,lightCoords)
