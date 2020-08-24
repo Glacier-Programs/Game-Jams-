@@ -126,7 +126,7 @@ def Credits():
     programHeader = Text(win,'header','Programming',[120,100],100,50)
     programText = Text(win,'text','Adam Kollgard - Jared Dewey',[50,150],100,20)
     musicHeader = Text(win,'header','Music',[160,180],50,50)
-    musicText = Text(win,'text','Travis Hahn - Kenney',[90,220],100,20)
+    musicText = Text(win,'text','Travis Hahn',[140,220],100,20)
     artHeader = Text(win,'header','Art',[180,240],25,50)
     artText = Text(win,'text','Jared Dewey',[140,280],50,20)
     texts = [title,programHeader,programText,musicHeader,musicText,artHeader,artText]
@@ -160,13 +160,13 @@ def Credits():
 def level_select():
     #buttons
     l1 = CircleBtn(win,'D-1',[50,50],80,50)
-    l1.add_function(lambda: story.story(win,'lvl1'))
+    l1.add_function(lambda: story.story(win,'lvls/lvl1'))
     l2 = CircleBtn(win,'D-2',[130,50],80,50)
-    l2.add_function(lambda: story.story(win,'lvl2'))
+    l2.add_function(lambda: story.story(win,'lvls/lvl2'))
     l3 = CircleBtn(win,'D-3',[210,50],80,50)
-    l3.add_function(lambda: story.story(win,'lvl3'))
+    l3.add_function(lambda: story.story(win,'lvls/lvl3'))
     l4 = CircleBtn(win,'D-4',[290,50],80,50)
-    l4.add_function(lambda: story.story(win,'lvl4'))
+    l4.add_function(lambda: story.story(win,'lvls/lvl4'))
     buttons = [l1,l2,l3,l4]
     Done = False
     while not Done:
