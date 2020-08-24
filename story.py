@@ -10,13 +10,11 @@ def story(win):
     jump_height = 0
     airTimeList = [0,20] # current , max
     
-    lantern = new_classes.Lantern(win, player, player.coords)
+    lantern = new_classes.Lantern(win,player,player.coords)
     player.set_surf(win)
     
-    level = read_level('lvl2',win)
-    # Collidables are platforms, walls, ground, etc.
+    level = read_level('lvl1',win)
     collidables = []
-    # Interacts are doors, etc
     interact = []
     for part in level:
         if part.sub == 'platform':
@@ -44,7 +42,7 @@ def story(win):
             for obj in interact:
                 xCase = obj.lCoords[0] < player.coords[0]+player.width and obj.lCoords[0]+obj.width > player.coords[0]
                 yCase = obj.lCoords[1] < player.coords[1]+player.height and obj.lCoords[1]+obj.height > player.coords[1]
-                #print(xCase,yCase)
+                print(xCase,yCase)
                 if xCase and yCase:
                     print('opened')
                     if obj.sub == 'door':
@@ -53,8 +51,6 @@ def story(win):
             # Latern goes into tracking mode 
             lantern.mode = 0
             lantern.trackingCoords = player.coords
-            pass
-        #unpressed
         
         #mousy mouse
         mouse = pg.mouse
@@ -64,7 +60,9 @@ def story(win):
                 # Latern goes in Stay Mode
                 lantern.mode = 1
                 lantern.trackingCoords = pos
-                pass
+            else: 
+                # This checks if you click on the lantern. 
+                lantern.checkGrapplingHook(pos)
         
         #jumping
         if player.jumping:
@@ -81,9 +79,19 @@ def story(win):
                 airTimeList[0] += 1
             else: dy += 5
         
-        player.move(collidables,dx,dy)
-        lantern.move()
 
+        if(lantern.playerGrappling):
+            # Moves player to the lantern and if finished sets playerGrappling to False which continues regular movement
+            lantern.playerGrappling = player.moveToLantern(lantern.coords)
+            # Reset mode to tracking
+            if not lantern.playerGrappling:
+                lantern.mode = 0
+                lantern.trackingCoords = player.coords
+        else: # Normal Movement
+            player.move(collidables,dx,dy)
+        
+        lantern.move()
+        
         #blank out screen
         win.fill((0,0,0))
         
