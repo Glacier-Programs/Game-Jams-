@@ -216,7 +216,7 @@ class Lantern(Sprite):
         self.mode = mode
     def render(self):
         self.surf.blit(self.sprite, self.coords)
-        self.light.update()
+        #self.light.update()
 
 class Background(Sprite):
     def __init__(self):
@@ -282,7 +282,18 @@ class Power(Sprite):
         self.surf = surf
         self.rCoords = coords
         self.lCoords = coords
-        self.height,self.width = 50,50
+        self.height,self.width = 75,50
         self.sprite = pg.image.load('imgs/powerUp.png')
+        # This keeps track of where power is in the level list. So we can delete it later
+        self.levelIndex = 0
+        self.used = False
+    def isTouchingPowerUp(self, playCoords, width, height):
+        # This skips over it if we have gotten rid of it.
+        if self.used:
+            return False
+        xCase = playCoords[0]+width > self.lCoords[0] and playCoords[0] < self.lCoords[0] + self.width
+        yCase = playCoords[1]+height > self.lCoords[1] and playCoords[1] < self.lCoords[1] + self.height
+        return xCase and yCase
+
     def render(self):
         self.surf.blit(self.sprite,[self.rCoords[0],self.rCoords[1]+1])
