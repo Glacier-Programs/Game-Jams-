@@ -135,6 +135,26 @@ class Player(Sprite):
         yScreen = self.coords[1] > 400
         if yScreen or xScreen:
             self.respawn([100,100])
+    def moveToLantern(self, lanternCoords):
+        # Add/Subtract 5 to create a margin so it does not flash back and forth.
+        # Move x direction
+        xAlign, yAlign = False, False
+        if self.coords[0] < lanternCoords[0] - 5: # Move right
+            self.coords[0] += 10
+        elif self.coords[0] > lanternCoords[0] + 5: # Move Left
+            self.coords[0] -= 10
+        else:
+            xAlign = True
+        # Move y direction
+        if self.coords[1] > lanternCoords[1] + 5: # Move up
+            self.coords[1] -= 10
+        elif self.coords[1] < lanternCoords[1] - 5: # Move down
+            self.coords[1] += 10
+        else:
+            yAlign = True
+        # If they are both aligned then we stop grappling resulting in False
+        return not (xAlign and yAlign)
+
     def set_surf(self,surf):
         self.surf = surf
     def render(self):
@@ -159,6 +179,7 @@ class Lantern(Sprite):
         self.player = player
         # You can not set it equal to coord or else it will be equal to playerCoords
         self.coords = [coords[0], coords[1]]
+        self.playerGrappling = False
         self.lightLevel = 2
         self.light = Light(win,self,self.lightLevel*25)
         # Mode 0: Tracking Mode | Mode 1: Stay Mode
@@ -167,14 +188,21 @@ class Lantern(Sprite):
         self.sprite.fill((255,255,0))
         self.surf = win
         self.trackingCoords = player.coords
-    def moveCoords(self, x, y):
-        self.coords[0] += x
-        self.coords[1] += y
+
+    def checkGrapplingHook(self, playPos):
+        # 20 is the lightbox width and height
+        xCase = playPos[0] > self.coords[0] and playPos[0] < self.coords[0] + 20
+        yCase = playPos[1] > self.coords[1] and playPos[1] < self.coords[1] + 20
+        self.playerGrappling = xCase and yCase
+
     def move(self):
         laternSpeed = 5
-        # 40 is the distance between the lantern and the player
+        # 40 is the distance between the lantern and the player and only goes when tracking the player
+        hoverHeight = 40
+        if self.mode == 1:
+            hoverHeight = 0
         x = self.trackingCoords[0]
-        y = self.trackingCoords[1] - 40
+        y = self.trackingCoords[1] - hoverHeight
         if x - 5 > self.coords[0]: # Lantern moves right
             self.coords[0] += laternSpeed
         elif x + 5 < self.coords[0]: # Lantern moves left
