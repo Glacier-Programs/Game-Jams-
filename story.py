@@ -3,7 +3,7 @@ import pygame as pg
 import new_classes
 
 #game loop
-def story(win):
+def story(win,lvl):
     player = new_classes.Player([100,100],20,40)
     jump_height = 10
     jump_max = 100
@@ -11,23 +11,18 @@ def story(win):
     airTimeList = [0,20] # current , max
     
     lantern = new_classes.Lantern(win,player,player.coords)
-    player.set_surf(win)
+    player.set_surf(lantern.light)
     
-    level = read_level('lvl1',win)
-
-    level.append(new_classes.Power(win, [200, 300]))
-
+    level = read_level(lvl,win)
     collidables = []
     interact = []
-    for x in range(0, len(level)):
-        if level[x].sub == 'platform':
-            collidables.append(level[x])
+    for part in level:
+        if part.sub == 'platform':
+            collidables.append(part)
         else:
-            interact.append(level[x])
-            # We keep track of the index so we can delete it later when the player touches it
-            if level[x].sub == 'power':
-                level[x].levelIndex = x
-        
+            interact.append(part)
+    lantern.light.add_sprites(level)
+    lantern.light.add_sprites([player])
     done = False
     while not done:
         for event in pg.event.get():
@@ -85,19 +80,19 @@ def story(win):
                 airTimeList[0] += 1
             else: dy += 5
         
-        # Power Up
+         # Power Up
         for obj in interact:
             if obj.sub == "power":
                 if obj.isTouchingPowerUp(player.coords, player.width, player.height):
-
                     # Here you can add the powerUp effect
-                    print("POWER UP!!!")
+                    lantern.deplete = 0
                     # Deletes the index from level so it is no longer used
                     level.pop(obj.levelIndex)
+                    lantern.light.remove_sprite(obj)
                     obj.used = True
-                    break    
-
-        # Movement
+                    break  
+        
+        # movement
         if(lantern.playerGrappling):
             # Moves player to the lantern and if finished sets playerGrappling to False which continues regular movement
             lantern.playerGrappling = player.moveToLantern(lantern.coords)
@@ -111,11 +106,11 @@ def story(win):
         
         #blank out screen
         win.fill((0,0,0))
-        
+        '''
         #render
         for sprite in level:
             sprite.render()
-        player.render()
+        player.render()'''
         lantern.render()
         
         #update screen
@@ -124,5 +119,5 @@ def story(win):
 
 if __name__ == '__main__':
     win = pg.display.set_mode((400,400))
-    story(win)
+    story(win,'lvl1')
     pg.quit()
