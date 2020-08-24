@@ -216,7 +216,7 @@ class Lantern(Sprite):
         self.mode = mode
     def render(self):
         self.surf.blit(self.sprite, self.coords)
-        #self.light.update()
+        self.light.update()
 
 class Background(Sprite):
     def __init__(self):

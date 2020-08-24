@@ -12,8 +12,7 @@ def story(win):
     
     lantern = new_classes.Lantern(win,player,player.coords)
     player.set_surf(win)
-    
-    level = read_level('lvl1',win)
+    level = read_level('lvl3',win)
     collidables = []
     interact = []
     for part in level:
@@ -78,8 +77,6 @@ def story(win):
             if airTimeList[0] <= airTimeList[1]:
                 airTimeList[0] += 1
             else: dy += 5
-        
-
         if(lantern.playerGrappling):
             # Moves player to the lantern and if finished sets playerGrappling to False which continues regular movement
             lantern.playerGrappling = player.moveToLantern(lantern.coords)
@@ -89,7 +86,7 @@ def story(win):
                 lantern.trackingCoords = player.coords
         else: # Normal Movement
             player.move(collidables,dx,dy)
-        
+        player.move(collidables,dx,dy)
         lantern.move()
         
         #blank out screen

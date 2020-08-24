@@ -5,7 +5,12 @@ import menu
 pg.init()
 menu.init({'buttons':pg.font.SysFont('dejavuserif',40),'title':pg.font.SysFont('lato',60),'header':pg.font.SysFont('lato',30),'text':pg.font.SysFont('dejavuserif',20)})
 
+#clock
 clock = pg.time.Clock()
+
+#music
+pg.mixer.music.load('mus.wav')
+pg.mixer.music.play(-1) #setting it to negative ones mean play infinitly, other numbers just mean play x amount of times
 
 #screen
 SCREEN_WIDTH = 400
