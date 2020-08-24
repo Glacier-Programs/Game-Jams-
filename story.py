@@ -12,14 +12,21 @@ def story(win):
     
     lantern = new_classes.Lantern(win,player,player.coords)
     player.set_surf(win)
-    level = read_level('lvl3',win)
+    
+    level = read_level('lvl1',win)
+
+    level.append(new_classes.Power(win, [200, 300]))
+
     collidables = []
     interact = []
-    for part in level:
-        if part.sub == 'platform':
-            collidables.append(part)
+    for x in range(0, len(level)):
+        if level[x].sub == 'platform':
+            collidables.append(level[x])
         else:
-            interact.append(part)
+            interact.append(level[x])
+            # We keep track of the index so we can delete it later when the player touches it
+            if level[x].sub == 'power':
+                level[x].levelIndex = x
         
     done = False
     while not done:
@@ -77,6 +84,20 @@ def story(win):
             if airTimeList[0] <= airTimeList[1]:
                 airTimeList[0] += 1
             else: dy += 5
+        
+        # Power Up
+        for obj in interact:
+            if obj.sub == "power":
+                if obj.isTouchingPowerUp(player.coords, player.width, player.height):
+
+                    # Here you can add the powerUp effect
+                    print("POWER UP!!!")
+                    # Deletes the index from level so it is no longer used
+                    level.pop(obj.levelIndex)
+                    obj.used = True
+                    break    
+
+        # Movement
         if(lantern.playerGrappling):
             # Moves player to the lantern and if finished sets playerGrappling to False which continues regular movement
             lantern.playerGrappling = player.moveToLantern(lantern.coords)
@@ -86,7 +107,6 @@ def story(win):
                 lantern.trackingCoords = player.coords
         else: # Normal Movement
             player.move(collidables,dx,dy)
-        player.move(collidables,dx,dy)
         lantern.move()
         
         #blank out screen
