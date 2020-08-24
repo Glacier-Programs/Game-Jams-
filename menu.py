@@ -1,12 +1,22 @@
 import pygame as pg
 import story
 
-fonts = None
-done = False
-returnMe = None 
-def init(Fonts):
-    global fonts
-    fonts = Fonts
+SCREEN_WIDTH = 400
+SCREEN_HEIGHT = 400
+
+win = pg.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
+pg.display.set_caption('Lights Out')
+
+#fonts
+fonts = {'buttons':pg.font.SysFont('dejavuserif',40),'title':pg.font.SysFont('lato',60),'header':pg.font.SysFont('lato',30),'text':pg.font.SysFont('dejavuserif',20)}
+
+#clock
+clock = pg.time.Clock()
+
+#music
+pg.mixer.music.load('sfx/mus.wav')
+pg.mixer.music.play(-1)
+
 
 class Button:
     def __init__(self,surf,text,coords,width,height,colour=(0,0,0),bg=(122,122,122)):
@@ -35,6 +45,7 @@ class CircleBtn(Button):
     def __init__(self,surf,text,coords,width,height,colour=(0,0,0),bg=(122,122,122)):
         self.drawTo = surf
         self.container = pg.surface.Surface((width,height))
+        self.container.fill((122,122,122))
         super().__init__(self.container,text,coords,width,height,colour,bg)
         self.rect = self.textSurf.get_rect()
         self.circle = pg.draw.ellipse(self.container,bg,self.rect)
@@ -57,13 +68,12 @@ class Text:
     def render(self):
         self.surf.blit(self.textSurf,self.coords)
 
-def start(win):
+def start():
     global done
     def Start():
-        #level_select(win)
-        story.story(win)
+        level_select()
     def openCredits():
-        Credits(win)
+        Credits()
         
     #text
     top = Text(win,'title','Lights Out',[75,20],150,40)
@@ -82,7 +92,8 @@ def start(win):
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 done = True
-                return True
+                pg.quit()
+                quit()
         
         #mousy mouse
         mouse = pg.mouse
@@ -105,17 +116,20 @@ def start(win):
         pg.display.update()
         pg.time.Clock().tick(60)
 
-def Credits(win):
+def Credits():
     def Return():
         global Done
-        Done = False
+        Done = True
+    global Done
     #make text
     title = Text(win,'title','Credits',[100,20],200,60)
-    programHeader = Text(win,'header','Programing',[100,100],100,50)
-    programText = Text(win,'text','Adam Kollgard - Jared Dewey',[50,160],100,20)
-    musicHeader = Text(win,'header','Music',[150,190],50,50)
-    musicText = Text(win,'text','Travis Hahn',[100,260],100,20)
-    texts = [title,programHeader,programText,musicHeader,musicText]
+    programHeader = Text(win,'header','Programming',[120,100],100,50)
+    programText = Text(win,'text','Adam Kollgard - Jared Dewey',[50,150],100,20)
+    musicHeader = Text(win,'header','Music',[160,180],50,50)
+    musicText = Text(win,'text','Travis Hahn - Kenney',[90,220],100,20)
+    artHeader = Text(win,'header','Art',[180,240],25,50)
+    artText = Text(win,'text','Jared Dewey',[140,280],50,20)
+    texts = [title,programHeader,programText,musicHeader,musicText,artHeader,artText]
     #make buttons
     returnBtn = Button(win,'Return',[125,350],200,40,bg=None)
     returnBtn.add_function(Return)
@@ -143,9 +157,17 @@ def Credits(win):
         pg.display.update()
         pg.time.Clock().tick(60)
 
-def level_select(win):
+def level_select():
     #buttons
-    buttons = [CircleBtn(win,'D-1',[100,100],80,50)]
+    l1 = CircleBtn(win,'D-1',[50,50],80,50)
+    l1.add_function(lambda: story.story(win,'lvl1'))
+    l2 = CircleBtn(win,'D-2',[130,50],80,50)
+    l2.add_function(lambda: story.story(win,'lvl2'))
+    l3 = CircleBtn(win,'D-3',[210,50],80,50)
+    l3.add_function(lambda: story.story(win,'lvl3'))
+    l4 = CircleBtn(win,'D-4',[290,50],80,50)
+    l4.add_function(lambda: story.story(win,'lvl4'))
+    buttons = [l1,l2,l3,l4]
     Done = False
     while not Done:
         for event in pg.event.get():
@@ -156,10 +178,15 @@ def level_select(win):
         #mousy mouse
         mouse = pg.mouse
         if mouse.get_pressed()[0]:
-            pass
+            for button in buttons:
+                if button.in_bounds(mouse.get_pos()):
+                    button.func()
         #render
-        win.fill((0,0,0))
+        win.fill((255,255,255))
         for button in buttons:
             button.render()
         pg.display.flip()
         pg.time.Clock().tick(60)
+
+if __name__ == '__main__':
+    start()
