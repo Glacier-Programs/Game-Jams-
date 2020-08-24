@@ -1,0 +1,12 @@
+dungeon
+end(1,1,1)
+power(6,0,1)
+ground(0,7,8)
+wall(0,0,7)
+wall(7,0,7)
+platform(1,2,1)
+platform(2,5,1)
+platform(3,5,1)
+platform(4,5,1)
+
+
